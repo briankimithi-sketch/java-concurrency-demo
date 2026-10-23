@@ -84,7 +84,6 @@ public class CounterBenchmark {
         CountDownLatch start = new CountDownLatch(1);
 
         try {
-            @SuppressWarnings("unchecked")
             Future<?>[] tasks = new Future<?>[THREADS];
 
             for (int i = 0; i < THREADS; i++) {
