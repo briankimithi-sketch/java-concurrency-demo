@@ -9,44 +9,51 @@ public class FutureExceptionDemo {
 
     public static void main(String[] args) {
         ExecutorService executor =
-                Executors.newFixedThreadPool(2);
+                Executors.newFixedThreadPool(3);
 
         try {
-            Future<String> paymentFuture = executor.submit(() -> {
-                System.out.println(
-                        "Processing payment on "
-                                + Thread.currentThread().getName());
+            Future<Integer> task1 =
+                    executor.submit(() -> {
+                        System.out.println("Task 1 executing");
+                        return 100;
+                    });
 
-                // Simulate a payment failure.
-                throw new IllegalStateException(
-                        "Payment provider is unavailable");
-            });
+            Future<Integer> task2 =
+                    executor.submit(() -> {
+                        System.out.println("Task 2 executing");
+                        throw new IllegalStateException(
+                                "Something went wrong in task 2");
+                    });
 
-            System.out.println("Payment task submitted.");
+            Future<Integer> task3 =
+                    executor.submit(() -> {
+                        System.out.println("Task 3 executing");
+                        return 300;
+                    });
 
-            try {
-                // This throws ExecutionException because the task failed.
-                String result = paymentFuture.get();
-                System.out.println("Payment result: " + result);
+            readResult("Task 1", task1);
+            readResult("Task 2", task2);
+            readResult("Task 3", task3);
 
-            } catch (ExecutionException e) {
-                System.out.println("Payment failed.");
-                System.out.println(
-                        "Underlying cause: "
-                                + e.getCause().getClass().getSimpleName());
-                System.out.println(
-                        "Reason: " + e.getCause().getMessage());
-            }
+        } finally {
+            executor.shutdown();
+        }
+    }
 
-            System.out.println(
-                    "Main thread continues running.");
+    private static void readResult(
+            String taskName, Future<Integer> future) {
+
+        try {
+            Integer result = future.get();
+            System.out.println(taskName + " result: " + result);
+
+        } catch (ExecutionException e) {
+            System.out.println(taskName + " failed: "
+                    + e.getCause().getMessage());
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.err.println(
-                    "Main thread was interrupted.");
-        } finally {
-            executor.shutdown();
+            System.out.println(taskName + " was interrupted.");
         }
     }
 }
